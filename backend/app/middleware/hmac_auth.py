@@ -74,15 +74,14 @@ class HMACAuthenticationMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app, exempt_paths: Optional[Set[str]] = None):
         super().__init__(app)
-        # Default public endpoints exempt from HMAC verification
+        # Default public and administrative endpoints exempt from HMAC verification
         self.exempt_paths: Set[str] = exempt_paths or {
             "/health",
             "/docs",
             "/redoc",
             "/openapi.json",
             "/favicon.ico",
-            "/api/v1/admin/clients",  # Allow initial registration
-            "/api/v1/admin/clients/register",
+            "/api/v1/admin/*",  # Key management and telemetry admin routes
         }
 
     def _is_path_exempt(self, path: str) -> bool:
@@ -90,7 +89,9 @@ class HMACAuthenticationMiddleware(BaseHTTPMiddleware):
         if path in self.exempt_paths:
             return True
         for exempt in self.exempt_paths:
-            if exempt.endswith("/*") and path.startswith(exempt[:-2]):
+            if exempt.endswith("/*") and (path.startswith(exempt[:-1]) or path == exempt[:-2]):
+                return True
+            if exempt.endswith("*") and path.startswith(exempt[:-1]):
                 return True
         return False
 
