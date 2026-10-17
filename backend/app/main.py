@@ -211,6 +211,15 @@ async def get_audit_logs(
 # Protected Application Endpoints (Require HMAC Verification)
 # -----------------------------------------------------------------------------
 
+# Mount Protected Business REST Endpoints
+from app.api.v1.protected_rest import router as protected_rest_router
+app.include_router(protected_rest_router)
+
+# Mount Protected Strawberry GraphQL Router
+from app.graphql.schema import graphql_app
+app.include_router(graphql_app, prefix="/graphql", tags=["Protected GraphQL"])
+
+
 @app.get("/api/v1/test/ping", tags=["Protected Endpoints"])
 async def protected_ping(request: Request):
     """Protected GET endpoint verifying HMAC authentication."""
@@ -231,3 +240,4 @@ async def protected_echo(request: Request):
         "authenticated_client_id": request.state.client_id,
         "received_payload": payload,
     }
+
