@@ -22,7 +22,7 @@ def master_key():
 
 def test_encryption_decryption_roundtrip(master_key):
     """Verify that encrypting and then decrypting returns the original secret."""
-    original_secret = "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"
+    original_secret = secrets.token_hex(32)
     encrypted = encrypt_secret(original_secret, master_key)
 
     assert encrypted != original_secret
@@ -34,19 +34,19 @@ def test_encryption_decryption_roundtrip(master_key):
 
 def test_iv_randomness(master_key):
     """Encrypting the same secret twice must produce distinct ciphertexts due to random 96-bit IVs."""
-    secret = "my_super_secret_client_key_12345"
+    secret = secrets.token_hex(32)
     encrypted1 = encrypt_secret(secret, master_key)
     encrypted2 = encrypt_secret(secret, master_key)
 
     assert encrypted1 != encrypted2
-    # But both decrypt back to the same secret
+    # Both decrypt back to the same secret
     assert decrypt_secret(encrypted1, master_key) == secret
     assert decrypt_secret(encrypted2, master_key) == secret
 
 
 def test_tampered_ciphertext_fails(master_key):
     """Modifying even a single character of the base64 ciphertext must fail GCM auth tag check."""
-    secret = "production_client_symmetric_secret"
+    secret = secrets.token_hex(32)
     encrypted = encrypt_secret(secret, master_key)
 
     # Flip one character in the middle
@@ -62,7 +62,7 @@ def test_tampered_ciphertext_fails(master_key):
 
 def test_wrong_master_key_fails(master_key):
     """Attempting to decrypt with a different master key must fail authentication."""
-    secret = "secure_token_payload"
+    secret = secrets.token_hex(32)
     encrypted = encrypt_secret(secret, master_key)
 
     different_master_key = secrets.token_hex(32)
